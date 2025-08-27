@@ -1,11 +1,11 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Database, Server, Table, ArrowRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { databaseApi } from "@/lib/api";
+import { Database, Eye, Server, Table } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { databaseApi } from "@/lib/api";
 
 interface DatabaseInfo {
   name: string;
@@ -53,6 +53,10 @@ export default function DatabasesPage() {
 
   const handleViewTables = (databaseName: string) => {
     router.push(`/dashboard/databases/${encodeURIComponent(databaseName)}/tables`);
+  };
+
+  const handleViewLogs = (databaseName: string) => {
+    router.push(`/dashboard/databases/${encodeURIComponent(databaseName)}/logs`);
   };
 
   if (loading) {
@@ -117,7 +121,7 @@ export default function DatabasesPage() {
           {databases.map((db, idx) => (
             <Card
               key={`${db.name}-${idx}`}
-              className="hover:shadow-lg transition-all cursor-pointer group hover:scale-[1.02]"
+              className="hover:shadow-lg transition-all group hover:scale-[1.02]"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -150,15 +154,24 @@ export default function DatabasesPage() {
                       <span className="font-medium">{db.size}</span>
                     </div>
                   )}
-                  <Button
-                    onClick={() => handleViewTables(db.name)}
-                    className="w-full mt-4"
-                    variant="outline"
-                  >
-                    <Table className="w-4 h-4 mr-2" />
-                    Ver Tabelas
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      onClick={() => handleViewTables(db.name)}
+                      className="w-1/2"
+                      variant="outline"
+                    >
+                      <Table className="w-4 h-4 mr-2" />
+                      Tabelas
+                    </Button>
+                    <Button
+                      onClick={() => handleViewLogs(db.name)}
+                      className="w-1/2"
+                      variant="outline"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Logs
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
