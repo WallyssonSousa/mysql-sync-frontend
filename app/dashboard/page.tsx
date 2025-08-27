@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Archive, Clock, Database, Activity, Users, Server } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { databaseApi } from "@/lib/api"
 
 type UserRole = "admin" | "user"
 
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [role, setRole] = useState<UserRole | null>(null)
   const [loading, setLoading] = useState(true)
+  const [databasesCount, setDatabasesCount] = useState<number | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -19,6 +21,21 @@ export default function DashboardPage() {
     setRole("admin")
     setLoading(false)
   }, [router])
+
+  // Busca quantidade de bancos ativos
+  useEffect(() => {
+    const fetchDatabases = async () => {
+      try {
+        const response = await databaseApi.getDatabases()
+        const databases = response.data || []
+        setDatabasesCount(databases.length)
+      } catch (error) {
+        console.error("Erro ao buscar bancos:", error)
+        setDatabasesCount(0)
+      }
+    }
+    fetchDatabases()
+  }, [])
 
   if (loading) {
     return (
@@ -61,9 +78,9 @@ export default function DashboardPage() {
   const stats = [
     {
       title: "Bancos Ativos",
-      value: "12",
+      value: databasesCount !== null ? databasesCount.toString() : "--",
       icon: Server,
-      change: "+2 este mês",
+      change: databasesCount !== null ? `Total encontrado` : "Carregando...",
     },
     {
       title: "Backups Hoje",
@@ -94,6 +111,7 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Aqui está um resumo das suas atividades e sistemas.</p>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon
@@ -116,6 +134,7 @@ export default function DashboardPage() {
         })}
       </div>
 
+      {/* Quick Actions */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-foreground">Acesso Rápido</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -132,11 +151,15 @@ export default function DashboardPage() {
                     <div className={`p-2 rounded-lg ${action.bgColor}`}>
                       <Icon className={`h-5 w-5 ${action.color}`} />
                     </div>
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors">{action.title}</CardTitle>
+                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                      {action.title}
+                    </CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{action.description}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {action.description}
+                  </p>
                 </CardContent>
               </Card>
             )
@@ -158,7 +181,10 @@ export default function DashboardPage() {
               { action: "Usuário conectado", target: "admin@datasync.com", time: "5 min atrás" },
               { action: "Agendamento criado", target: "export_daily", time: "1 hora atrás" },
             ].map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+              <div
+                key={index}
+                className="flex items-center justify-between py-2 border-b border-border last:border-0"
+              >
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-foreground">{activity.action}</p>
                   <p className="text-xs text-muted-foreground">{activity.target}</p>
