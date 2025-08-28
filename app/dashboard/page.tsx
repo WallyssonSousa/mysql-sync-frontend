@@ -83,7 +83,7 @@ export default function DashboardPage() {
       change: databasesCount !== null ? `Total encontrado` : "Carregando...",
     },
     {
-      title: "Backups Hoje",
+      title: "Backups",
       value: "8",
       icon: Archive,
       change: "100% sucesso",
