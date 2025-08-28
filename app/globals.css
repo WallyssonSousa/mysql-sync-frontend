@@ -86,3 +86,25 @@
   }
 }
 
+/* Scrollbar estilo Apple */
+::-webkit-scrollbar {
+  width: 8px; /* largura mínima */
+  height: 8px; /* para scroll horizontal */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* fundo invisível */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: oklch(0.45 0 0 / 60%); /* cinza translúcido */
+  border-radius: 9999px; /* super arredondado */
+  border: 2px solid transparent; /* cria espaçamento e leve efeito de "floating" */
+  background-clip: padding-box;
+  transition: background-color 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(0.55 0 0 / 70%); /* clareia no hover */
+}
+

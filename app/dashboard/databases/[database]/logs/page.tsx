@@ -45,8 +45,12 @@ export default function LogsPage() {
           setLogs([])
         }
       } catch (err) {
-        console.error(err)
-        setError("Erro ao carregar logs do banco de dados")
+        console.error("Erro ao buscar logs:", err)
+        setLogs([]) 
+        setStatus("offline")
+        setCheckpoint(null)
+        setTotalLogs(0)
+        setError("Não foi possível carregar os logs deste banco.")
       } finally {
         setLoading(false)
       }
@@ -54,6 +58,7 @@ export default function LogsPage() {
 
     fetchLogs()
   }, [database])
+
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "medium" })
@@ -85,9 +90,8 @@ export default function LogsPage() {
               </CardHeader>
               <CardContent>
                 <span
-                  className={`font-semibold ${
-                    status === "online" ? "text-green-600" : "text-red-600"
-                  }`}
+                  className={`font-semibold ${status === "online" ? "text-green-600" : "text-red-600"
+                    }`}
                 >
                   {status || "Desconhecido"}
                 </span>
@@ -131,13 +135,12 @@ export default function LogsPage() {
                     <div className="flex justify-between items-center mb-2">
                       <Badge
                         variant="outline"
-                        className={`${
-                          log.event_type === "INSERT"
+                        className={`${log.event_type === "INSERT"
                             ? "bg-green-100 text-green-700 border-green-300"
                             : log.event_type === "UPDATE"
-                            ? "bg-blue-100 text-blue-700 border-blue-300"
-                            : "bg-red-100 text-red-700 border-red-300"
-                        }`}
+                              ? "bg-blue-100 text-blue-700 border-blue-300"
+                              : "bg-red-100 text-red-700 border-red-300"
+                          }`}
                       >
                         {log.event_type}
                       </Badge>
