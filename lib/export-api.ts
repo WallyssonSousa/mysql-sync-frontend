@@ -8,13 +8,13 @@ export interface ExportConfig{
     backupDatabase: string
     createdAt?: string
     updatedAt?: string
-    status?: "active" | "inactive" | "error"
+    status?: "1" | "0" 
 }
 
 export interface ExportLog{
     id: number
     exportId: number
-    status: "success" | "error" | "running"
+    status: "SUCESS" | "error" | "running"
     message: string
     startTime: string
     endTime?: string
