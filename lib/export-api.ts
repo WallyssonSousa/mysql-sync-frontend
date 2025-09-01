@@ -15,7 +15,7 @@ export interface ExportLog{
     created_at: string | number | Date;
     id: number
     exportId: number
-    status: "SUCESS" | "error" | "running"
+    status: "SUCCESS" | "error" | "running"
     message: string
     startTime: string
     endTime?: string

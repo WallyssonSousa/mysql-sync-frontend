@@ -16,6 +16,24 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [databasesCount, setDatabasesCount] = useState<number | null>(null)
   const [logs, setLogs] = useState<ExportLog[]>([])
+  const [ successBackupCount, setBackupSuccessCount ] = useState(0);
+  const [backupTotalCount, setBackupTotalCount] = useState(0)
+ 
+  useEffect(() => {
+    const fetchBackups = async () => {
+      try {
+        const { data } = await exportApi.getExportLogs()
+        const successBackups = data.filter((log: ExportLog) => log.status === "SUCCESS")
+        setBackupSuccessCount(successBackups.length)
+        setBackupTotalCount(data.length)
+      } catch (error) {
+        console.error("Erro ao buscar logs:", error)
+      }
+    }
+
+    fetchBackups()
+  }, [])
+
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -25,7 +43,6 @@ export default function DashboardPage() {
     setLoading(false)
   }, [router])
 
-  // Busca quantidade de bancos ativos
   useEffect(() => {
     const fetchDatabases = async () => {
       try {
@@ -96,6 +113,9 @@ export default function DashboardPage() {
     },
   ]
 
+  const backupPercentage =
+    backupTotalCount > 0 ? Math.round((successBackupCount / backupTotalCount) * 100) : 0
+
   const stats = [
     {
       title: "Bancos Ativos",
@@ -105,9 +125,9 @@ export default function DashboardPage() {
     },
     {
       title: "Backups",
-      value: "8",
+      value: successBackupCount.toString(),
       icon: Archive,
-      change: "100% sucesso",
+      change: `${backupPercentage}% sucesso`,
     },
     {
       title: "Usuários Online",
@@ -204,7 +224,7 @@ export default function DashboardPage() {
                 >
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
-                      {log.status === "SUCESS"
+                      {log.status === "SUCCESS"
                         ? "Backup realizado"
                         : log.status === "error"
                           ? "Erro na exportação"
