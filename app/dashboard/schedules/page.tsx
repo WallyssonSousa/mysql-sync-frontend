@@ -259,12 +259,13 @@ export default function ExportControlPage() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-foreground">Controle de Exportação</h1>
           <p className="text-muted-foreground">Gerencie configurações e monitore exportações de dados.</p>
         </div>
-
+  
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button
@@ -305,7 +306,7 @@ export default function ExportControlPage() {
                   </SelectContent>
                 </Select>
               </div>
-
+  
               <div className="space-y-2">
                 <Label htmlFor="target">Destino</Label>
                 <Select
@@ -322,7 +323,7 @@ export default function ExportControlPage() {
                   </SelectContent>
                 </Select>
               </div>
-
+  
               <div className="space-y-2">
                 <Label htmlFor="path">Caminho de Destino</Label>
                 <Input
@@ -333,7 +334,7 @@ export default function ExportControlPage() {
                   required
                 />
               </div>
-
+  
               <div className="space-y-2">
                 <Label htmlFor="backupDatabase">Banco de Dados</Label>
                 <Input
@@ -344,7 +345,7 @@ export default function ExportControlPage() {
                   required
                 />
               </div>
-
+  
               <div className="flex gap-2 pt-4">
                 <Button type="submit" className="flex-1">
                   {editingExport ? "Atualizar" : "Criar"}
@@ -357,7 +358,7 @@ export default function ExportControlPage() {
           </DialogContent>
         </Dialog>
       </div>
-
+  
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
@@ -371,8 +372,18 @@ export default function ExportControlPage() {
                     <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                     <p className="text-xs text-muted-foreground">{stat.change}</p>
                   </div>
-                  <div className="p-3 bg-primary/10 rounded-full">
-                    <Icon className="w-5 h-5 text-primary" />
+                  <div
+                    className={`p-3 rounded-full ${
+                      stat.title === "Exportações Ativas"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : stat.title === "Exportações Hoje"
+                        ? "bg-blue-100 text-blue-700"
+                        : stat.title === "Taxa de Sucesso"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-orange-100 text-orange-700"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
                   </div>
                 </div>
               </CardContent>
@@ -380,7 +391,7 @@ export default function ExportControlPage() {
           )
         })}
       </div>
-
+  
       {/* Export Configurations */}
       <Card>
         <CardHeader>
@@ -406,8 +417,14 @@ export default function ExportControlPage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium">{exportConfig.backupDatabase}</h3>
-                      <Badge variant={exportConfig.active ? "default" : "destructive"}>
-                        {exportConfig.active ? "active" : "inactive"}
+                      <Badge
+                        className={
+                          exportConfig.active
+                            ? "bg-emerald-500 text-white"
+                            : "bg-red-500 text-white"
+                        }
+                      >
+                        {exportConfig.active ? "Ativo" : "Inativo"}
                       </Badge>
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">
@@ -452,8 +469,8 @@ export default function ExportControlPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Export Logs */}
+  
+      {/* Logs */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -462,42 +479,61 @@ export default function ExportControlPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {logs.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum log de exportação encontrado.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {logs.slice(0, 10).map((log) => (
-                <div key={log.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      {log.status === "success" ? (
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                      ) : log.status === "error" ? (
+          {logs.slice(0, 10).map((log) => {
+            const status = log.status?.toLowerCase()
+            return (
+              <div
+                key={log.id}
+                className="flex items-center justify-between py-3 border-b border-border last:border-0"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`p-1.5 rounded-full ${
+                        status === "success"
+                          ? "bg-emerald-100"
+                          : status === "error"
+                          ? "bg-red-100"
+                          : "bg-yellow-100"
+                      }`}
+                    >
+                      {status === "success" ? (
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      ) : status === "error" ? (
                         <XCircle className="w-4 h-4 text-red-600" />
                       ) : (
                         <Clock className="w-4 h-4 text-yellow-600" />
                       )}
-                      <span className="font-medium">Exportação #{log.exportId}</span>
-                      <Badge variant={log.status === "success" ? "default" : log.status === "error" ? "destructive" : "secondary"}>
-                        {log.status}
-                      </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{log.message}</p>
+                    <span className="font-medium">Exportação #{log.exportId}</span>
+                    <Badge
+                      className={
+                        status === "success"
+                          ? "bg-emerald-500 text-white"
+                          : status === "error"
+                          ? "bg-red-500 text-white"
+                          : "bg-yellow-400 text-black"
+                      }
+                    >
+                      {status === "success"
+                        ? "Sucesso"
+                        : status === "error"
+                        ? "Erro"
+                        : "Pendente"}
+                    </Badge>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(log.createdAt).toLocaleString("pt-BR")}
-                    </p>
-                  </div>
+                  <p className="text-sm text-muted-foreground">{log.message}</p>
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(log.createdAt).toLocaleString("pt-BR")}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
         </CardContent>
       </Card>
     </div>
-  )
+  )  
 }
