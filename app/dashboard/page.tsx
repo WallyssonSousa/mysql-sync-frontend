@@ -5,6 +5,8 @@ import { Archive, Clock, Database, Activity, Users, Server } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { databaseApi } from "@/lib/api"
+import { exportApi } from "@/lib/export-api"
+import { ExportLog } from "@/lib/export-api"
 
 type UserRole = "admin" | "user"
 
@@ -13,6 +15,7 @@ export default function DashboardPage() {
   const [role, setRole] = useState<UserRole | null>(null)
   const [loading, setLoading] = useState(true)
   const [databasesCount, setDatabasesCount] = useState<number | null>(null)
+  const [logs, setLogs] = useState<ExportLog[]>([])
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -35,7 +38,25 @@ export default function DashboardPage() {
       }
     }
     fetchDatabases()
+  }, []);
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const { data } = await exportApi.getExportLogs();
+        const sorted = data.sort(
+          (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+        )
+        setLogs(sorted.slice(0, 5))
+      } catch (error) {
+        console.error("Erro ao buscar logs: ", error)
+      }
+    }
+
+    fetchLogs()
   }, [])
+
+
 
   if (loading) {
     return (
@@ -175,22 +196,33 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {[
-              { action: "Backup realizado", target: "database_prod", time: "2 min atrás" },
-              { action: "Usuário conectado", target: "admin@datasync.com", time: "5 min atrás" },
-              { action: "Agendamento criado", target: "export_daily", time: "1 hora atrás" },
-            ].map((activity, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between py-2 border-b border-border last:border-0"
-              >
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">{activity.action}</p>
-                  <p className="text-xs text-muted-foreground">{activity.target}</p>
+            {logs.length > 0 ? (
+              logs.map((log) => (
+                <div
+                  key={log.id}
+                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                >
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">
+                      {log.status === "SUCESS"
+                        ? "Backup realizado"
+                        : log.status === "error"
+                          ? "Erro na exportação"
+                          : "Exportação em andamento"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{log.message}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(log.created_at).toLocaleString("pt-BR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground">{activity.time}</span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhuma atividade recente</p>
+            )}
           </div>
         </CardContent>
       </Card>
