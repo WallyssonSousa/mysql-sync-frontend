@@ -1,12 +1,11 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Archive, Clock, Database, Activity, Users, Server } from "lucide-react"
+import { databaseApi, userApi } from "@/lib/api"
+import { exportApi, ExportLog } from "@/lib/export-api"
+import { Activity, Archive, Clock, Database, Server, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { databaseApi } from "@/lib/api"
-import { exportApi } from "@/lib/export-api"
-import { ExportLog } from "@/lib/export-api"
 
 type UserRole = "admin" | "user"
 
@@ -16,9 +15,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [databasesCount, setDatabasesCount] = useState<number | null>(null)
   const [logs, setLogs] = useState<ExportLog[]>([])
-  const [ successBackupCount, setBackupSuccessCount ] = useState(0);
-  const [backupTotalCount, setBackupTotalCount] = useState(0)
- 
+  const [successBackupCount, setBackupSuccessCount] = useState(0);
+  const [backupTotalCount, setBackupTotalCount] = useState(0);
+  const [userCount, setUserCount] = useState(0);
+  const [systemStatus, setSystemStatus] = useState({ value: "0%", change: "Carregando..." });
+
   useEffect(() => {
     const fetchBackups = async () => {
       try {
@@ -73,6 +74,54 @@ export default function DashboardPage() {
     fetchLogs()
   }, [])
 
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await userApi.getUsers();
+        setUserCount(response.data.length);
+      } catch (error) {
+        console.error("Erro ao buscar usuários: ", error);
+      }
+    }
+
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const fetchSystemStatus = async () => {
+      try {
+        const databasesResponse = await databaseApi.getDatabases();
+        const databases = databasesResponse.data || [];
+
+        let totalLogs = 0;
+        let errorLogs = 0;
+
+        for (const db of databases) {
+          try {
+            const logsResponse = await databaseApi.getLogs(db.name);
+            const logs = logsResponse.data || [];
+            totalLogs += logs.length;
+            errorLogs += logs.filter((log: { status: string }) => log.status === "error").length;
+          } catch (logError) {
+            console.warn(`Não foi possível buscar logs do banco ${db.name}:`, logError);
+          }
+        }
+
+        const successLogs = totalLogs - errorLogs;
+        const healthPercent = totalLogs > 0 ? ((successLogs / totalLogs) * 100).toFixed(1) : "100";
+
+        setSystemStatus({
+          value: `${healthPercent}%`,
+          change: errorLogs > 0 ? `Erros detectados: ${errorLogs}` : "Operacional",
+        });
+      } catch (error) {
+        console.error("Erro ao buscar bancos:", error);
+        setSystemStatus({ value: "0%", change: "Erro ao verificar sistema" });
+      }
+    };
+
+    fetchSystemStatus();
+  }, []);
 
 
   if (loading) {
@@ -122,26 +171,47 @@ export default function DashboardPage() {
       value: databasesCount !== null ? databasesCount.toString() : "--",
       icon: Server,
       change: databasesCount !== null ? `Total encontrado` : "Carregando...",
+      color: "text-blue-600",
+      bgColor: "bg-blue-50 dark:bg-blue-950/20",
     },
     {
       title: "Backups",
       value: successBackupCount.toString(),
       icon: Archive,
       change: `${backupPercentage}% sucesso`,
+      color: "text-green-600",
+      bgColor: "bg-green-50 dark:bg-green-950/20",
     },
     {
-      title: "Usuários Online",
-      value: "24",
+      title: "Usuários no Sistema",
+      value: String(userCount),
       icon: Users,
-      change: "+12% vs ontem",
+      change: userCount === 1
+        ? "1 usuário cadastrado no sistema"
+        : `${userCount} usuários cadastrados no sistema`,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50 dark:bg-orange-950/20",
     },
     {
       title: "Status Sistema",
-      value: "99.9%",
+      value: systemStatus.value,
       icon: Activity,
-      change: "Operacional",
+      change: systemStatus.change,
+      color:
+        parseFloat(systemStatus.value) > 90
+          ? "text-green-600"
+          : parseFloat(systemStatus.value) > 70
+            ? "text-yellow-600"
+            : "text-red-600",
+      bgColor:
+        parseFloat(systemStatus.value) > 90
+          ? "bg-green-50 dark:bg-green-950/20"
+          : parseFloat(systemStatus.value) > 70
+            ? "bg-yellow-50 dark:bg-yellow-950/20"
+            : "bg-red-50 dark:bg-red-950/20",
     },
-  ]
+  ];
+
 
   const filteredActions = quickActions.filter((action) => role && action.roles.includes(role))
 
@@ -152,10 +222,9 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Aqui está um resumo das suas atividades e sistemas.</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
-          const Icon = stat.icon
+          const Icon = stat.icon;
           return (
             <Card key={stat.title} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
@@ -165,13 +234,13 @@ export default function DashboardPage() {
                     <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                     <p className="text-xs text-muted-foreground">{stat.change}</p>
                   </div>
-                  <div className="p-3 bg-primary/10 rounded-full">
-                    <Icon className="w-5 h-5 text-primary" />
+                  <div className={`${stat.bgColor} p-3 rounded-full`}>
+                    <Icon className={`${stat.color} w-5 h-5`} />
                   </div>
                 </div>
               </CardContent>
             </Card>
-          )
+          );
         })}
       </div>
 
@@ -210,9 +279,12 @@ export default function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            Atividade Recente
+            <div className="p-2 bg-cyan-50 dark:bg-cyan-950/20 rounded-full">
+              <Activity className="w-5 h-5 text-cyan-600" />
+            </div>
+            <span className="text-cyan-600 font-semibold">Atividade Recente</span>
           </CardTitle>
+
         </CardHeader>
         <CardContent>
           <div className="space-y-3">

@@ -34,3 +34,8 @@ export const backupApi = {
   }) => api.post("/sync/backup", backupData),
   /* getBackups: () => api.get("/sync/backups"), */
 };
+
+// API de usuários
+export const userApi = {
+  getUsers: () => api.get("/auth/users"),
+};
