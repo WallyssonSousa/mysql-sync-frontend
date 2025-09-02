@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, Menu, Settings, User } from "lucide-react"
+import { LogOut, Menu, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -109,10 +109,10 @@ export function Header({ onMenuClick }: HeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/dashboard")}>
-              <User className="mr-2 h-4 w-4" />
+{/*             <DropdownMenuItem onClick={() => router.push("/dashboard")}>
+             className="mr-2 h-4 w-4" />
               <span>Perfil</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuItem onClick={() => router.push("/dashboard/config")}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Configurações</span>
