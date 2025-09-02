@@ -38,4 +38,10 @@ export const backupApi = {
 // API de usuários
 export const userApi = {
   getUsers: () => api.get("/auth/users"),
-};
+  register: (data: { username: string; password_hash: string; role: string }) =>
+    api.post("/auth/register", data),
+  updateUser: (id: number, data: { username?: string; password_hash?: string; role?: string }) =>
+    api.put(`/auth/users/${id}`, data),
+  deleteUser: (id: number) => api.delete(`/auth/users/${id}`),
+}
+
