@@ -156,7 +156,7 @@ export default function DatabasesPage() {
                 <SelectItem value="inactive">Inativo</SelectItem>
               </SelectContent>
             </Select>
-</div>
+          </div>
         </CardContent>
       </Card>
 
@@ -188,11 +188,10 @@ export default function DatabasesPage() {
                     </div>
                   </div>
                   <div
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      db.status === "active"
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${db.status === "active"
                         ? "bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400"
                         : "bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400"
-                    }`}
+                      }`}
                   >
                     {db.status === "active" ? "Ativo" : "Inativo"}
                   </div>
