@@ -2,10 +2,18 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { databaseApi } from "@/lib/api";
 import { Database, Eye, Server, Table } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface DatabaseInfo {
   name: string;
@@ -20,6 +28,11 @@ export default function DatabasesPage() {
   const [databases, setDatabases] = useState<DatabaseInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // filtros
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -58,6 +71,18 @@ export default function DatabasesPage() {
   const handleViewLogs = (databaseName: string) => {
     router.push(`/dashboard/databases/${encodeURIComponent(databaseName)}/logs`);
   };
+
+  // aplicar filtros
+  const filteredDatabases = useMemo(() => {
+    return databases.filter((db) => {
+      const matchName = db.name.toLowerCase().includes(search.toLowerCase());
+      const matchStatus =
+        statusFilter === "all" || db.status === statusFilter;
+      const matchType =
+        typeFilter === "all" || db.type?.toLowerCase() === typeFilter.toLowerCase();
+      return matchName && matchStatus && matchType;
+    });
+  }, [databases, search, statusFilter, typeFilter]);
 
   if (loading) {
     return (
@@ -102,23 +127,50 @@ export default function DatabasesPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-foreground">Bancos de Dados</h1>
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+          <Database className="w-7 h-7 text-primary" />
+          Bancos de Dados
+        </h1>
         <p className="text-muted-foreground">
-          Visualize todos os bancos de dados conectados no servidor. Total: {databases.length} banco(s)
+          Visualize todos os bancos de dados conectados no servidor. Total: {filteredDatabases.length} banco(s)
         </p>
       </div>
 
-      {databases.length === 0 ? (
+      {/* filtros */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Input
+              placeholder="Buscar por nome..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <Select onValueChange={setStatusFilter} value={statusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="active">Ativo</SelectItem>
+                <SelectItem value="inactive">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+</div>
+        </CardContent>
+      </Card>
+
+      {filteredDatabases.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <Database className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum banco encontrado</h3>
-            <p className="text-muted-foreground">Não há bancos de dados conectados no momento.</p>
+            <p className="text-muted-foreground">Não há bancos de dados conectados com esses filtros.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {databases.map((db, idx) => (
+          {filteredDatabases.map((db, idx) => (
             <Card
               key={`${db.name}-${idx}`}
               className="hover:shadow-lg transition-all group hover:scale-[1.02]"
