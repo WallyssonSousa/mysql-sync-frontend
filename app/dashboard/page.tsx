@@ -20,21 +20,21 @@ export default function DashboardPage() {
   const [userCount, setUserCount] = useState(0);
   const [systemStatus, setSystemStatus] = useState({ value: "0%", change: "Carregando..." });
 
+
   useEffect(() => {
     const fetchBackups = async () => {
       try {
         const { data } = await exportApi.getExportLogs()
-        const successBackups = data.filter((log: ExportLog) => log.status === "SUCCESS")
+        const successBackups = data.logs.filter((log) => log.status === "SUCCESS")
         setBackupSuccessCount(successBackups.length)
-        setBackupTotalCount(data.length)
+        setBackupTotalCount(data.logs.length)
       } catch (error) {
         console.error("Erro ao buscar logs:", error)
       }
     }
-
+  
     fetchBackups()
   }, [])
-
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -61,16 +61,16 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const { data } = await exportApi.getExportLogs();
-        const sorted = data.sort(
-          (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+        const { data } = await exportApi.getExportLogs()
+        const sorted = data.logs.sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
         setLogs(sorted.slice(0, 5))
       } catch (error) {
         console.error("Erro ao buscar logs: ", error)
       }
     }
-
+  
     fetchLogs()
   }, [])
 

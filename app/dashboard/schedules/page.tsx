@@ -130,14 +130,19 @@ export default function ExportControlPage() {
       try {
         const [exportsResponse, logsResponse] = await Promise.all([
           exportApi.getExports().catch(() => ({ data: [] as ApiExportConfig[] })),
-          exportApi.getExportLogs().catch(() => ({ data: [] as ApiExportLog[] })),
+          exportApi.getExportLogs().catch(() => ({
+            data: { logs: [] as ApiExportLog[], stats: { total: 0, sucess: 0, failed: 0 } }
+          })),
         ])
 
         const mappedExports = (exportsResponse.data ?? []).map(mapExportConfig)
-        const mappedLogs = (logsResponse.data ?? []).map(mapExportLog)
+        const mappedLogs = (logsResponse.data?.logs ?? []).map(mapExportLog)
 
         setExportsCfg(mappedExports)
         setLogs(mappedLogs)
+
+        // 🔹 Se quiser já salvar as estatísticas:
+        // setStats(logsResponse.data?.stats ?? { total: 0, sucess: 0, failed: 0 })
       } catch (error) {
         console.error("Erro ao buscar dados:", error)
         toast.error("Não foi possível carregar os dados de exportação.")
@@ -146,6 +151,7 @@ export default function ExportControlPage() {
 
     if (role) fetchData()
   }, [role])
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
