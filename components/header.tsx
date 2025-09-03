@@ -19,9 +19,14 @@ function parseJwt(token: string) {
   try {
     const base64Url = token.split(".")[1]
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
-    return JSON.parse(decodeURIComponent(atob(base64).split("").map(c => {
-      return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
-    }).join("")))
+    return JSON.parse(
+      decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      )
+    )
   } catch {
     return null
   }
@@ -37,22 +42,31 @@ interface UserType {
   avatarUrl?: string
 }
 
+interface ColorType {
+  bg: string
+  text: string
+}
+
 export function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter()
   const [user, setUser] = useState<UserType | null>(null)
-  const [avatarColor, setAvatarColor] = useState<string>("bg-gray-200")
+  const [avatarColor, setAvatarColor] = useState<ColorType>({
+    bg: "bg-gray-200",
+    text: "text-gray-700",
+  })
 
-  function getRandomColor() {
-    const colors = [
-      "bg-red-200",
-      "bg-green-200",
-      "bg-blue-200",
-      "bg-yellow-200",
-      "bg-purple-200",
-      "bg-pink-200",
-      "bg-orange-200",
-      "bg-teal-200",
+  function getRandomColor(): ColorType {
+    const colors: ColorType[] = [
+      { bg: "bg-red-50 dark:bg-red-950/20", text: "text-red-600" },
+      { bg: "bg-green-50 dark:bg-green-950/20", text: "text-green-600" },
+      { bg: "bg-blue-50 dark:bg-blue-950/20", text: "text-blue-600" },
+      { bg: "bg-yellow-50 dark:bg-yellow-950/20", text: "text-yellow-600" },
+      { bg: "bg-purple-50 dark:bg-purple-950/20", text: "text-purple-600" },
+      { bg: "bg-pink-50 dark:bg-pink-950/20", text: "text-pink-600" },
+      { bg: "bg-orange-50 dark:bg-orange-950/20", text: "text-orange-600" },
+      { bg: "bg-teal-50 dark:bg-teal-950/20", text: "text-teal-600" },
     ]
+
     return colors[Math.floor(Math.random() * colors.length)]
   }
 
@@ -67,7 +81,7 @@ export function Header({ onMenuClick }: HeaderProps) {
     setAvatarColor(getRandomColor())
   }, [])
 
-  if (!user) return null;
+  if (!user) return null
 
   const initials = user.username.slice(0, 2).toUpperCase()
   const email = `${user.username}@datasync.com`
@@ -95,7 +109,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
-                <AvatarFallback className={`${avatarColor} text-primary-foreground`}>
+                <AvatarFallback className={`${avatarColor.bg} ${avatarColor.text}`}>
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -109,10 +123,6 @@ export function Header({ onMenuClick }: HeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-{/*             <DropdownMenuItem onClick={() => router.push("/dashboard")}>
-             className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
-            </DropdownMenuItem> */}
             <DropdownMenuItem onClick={() => router.push("/dashboard/config")}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Configurações</span>

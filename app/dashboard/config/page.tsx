@@ -135,8 +135,8 @@ export default function SettingsPage() {
                                             <div className="flex items-center gap-4">
                                                 <div
                                                     className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold ${isAdmin
-                                                        ? "bg-orange-300 text-orange-600"
-                                                        : "bg-blue-300 text-blue-600"
+                                                            ? "bg-orange-50 dark:bg-orange-950/20 text-orange-600"
+                                                            : "bg-blue-50 dark:bg-blue-950/20 text-blue-600"
                                                         }`}
                                                 >
                                                     {user.username[0].toUpperCase()}

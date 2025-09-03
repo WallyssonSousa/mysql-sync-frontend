@@ -219,24 +219,32 @@ export default function ExportControlPage() {
         value: activeCount.toString(),
         icon: Play,
         change: "Configuradas",
+        color: "text-green-600",
+        bgColor: "bg-green-50 dark:bg-green-950/20",
       },
       {
         title: "Exportações Hoje",
         value: runsToday.toString(),
         icon: Download,
         change: "Executadas",
+        color: "text-blue-600",
+        bgColor: "bg-blue-50 dark:bg-blue-950/20",
       },
       {
         title: "Taxa de Sucesso",
         value: successRate,
         icon: CheckCircle,
         change: "Últimos 30 dias",
+        color: "text-purple-600",
+        bgColor: "bg-purple-50 dark:bg-purple-950/20",
       },
       {
         title: "Status Sistema",
         value: "Online",
         icon: Activity,
         change: "Operacional",
+        color: "text-orange-600",
+        bgColor: "bg-orange-50 dark:bg-orange-950/20",
       },
     ]
   }, [exportsCfg, logs])
@@ -265,7 +273,7 @@ export default function ExportControlPage() {
           <h1 className="text-3xl font-bold text-foreground">Controle de Exportação</h1>
           <p className="text-muted-foreground">Gerencie configurações e monitore exportações de dados.</p>
         </div>
-  
+
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button
@@ -306,7 +314,7 @@ export default function ExportControlPage() {
                   </SelectContent>
                 </Select>
               </div>
-  
+
               <div className="space-y-2">
                 <Label htmlFor="target">Destino</Label>
                 <Select
@@ -323,7 +331,7 @@ export default function ExportControlPage() {
                   </SelectContent>
                 </Select>
               </div>
-  
+
               <div className="space-y-2">
                 <Label htmlFor="path">Caminho de Destino</Label>
                 <Input
@@ -334,7 +342,7 @@ export default function ExportControlPage() {
                   required
                 />
               </div>
-  
+
               <div className="space-y-2">
                 <Label htmlFor="backupDatabase">Banco de Dados</Label>
                 <Input
@@ -345,7 +353,7 @@ export default function ExportControlPage() {
                   required
                 />
               </div>
-  
+
               <div className="flex gap-2 pt-4">
                 <Button type="submit" className="flex-1">
                   {editingExport ? "Atualizar" : "Criar"}
@@ -358,7 +366,7 @@ export default function ExportControlPage() {
           </DialogContent>
         </Dialog>
       </div>
-  
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
@@ -372,17 +380,7 @@ export default function ExportControlPage() {
                     <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                     <p className="text-xs text-muted-foreground">{stat.change}</p>
                   </div>
-                  <div
-                    className={`p-3 rounded-full ${
-                      stat.title === "Exportações Ativas"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : stat.title === "Exportações Hoje"
-                        ? "bg-blue-100 text-blue-700"
-                        : stat.title === "Taxa de Sucesso"
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-orange-100 text-orange-700"
-                    }`}
-                  >
+                  <div className={`p-3 rounded-full ${stat.bgColor} ${stat.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                 </div>
@@ -391,7 +389,7 @@ export default function ExportControlPage() {
           )
         })}
       </div>
-  
+
       {/* Export Configurations */}
       <Card>
         <CardHeader>
@@ -469,7 +467,7 @@ export default function ExportControlPage() {
           )}
         </CardContent>
       </Card>
-  
+
       {/* Logs */}
       <Card>
         <CardHeader>
@@ -489,13 +487,12 @@ export default function ExportControlPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <div
-                      className={`p-1.5 rounded-full ${
-                        status === "success"
-                          ? "bg-emerald-100"
-                          : status === "error"
+                      className={`p-1.5 rounded-full ${status === "success"
+                        ? "bg-emerald-100"
+                        : status === "error"
                           ? "bg-red-100"
                           : "bg-yellow-100"
-                      }`}
+                        }`}
                     >
                       {status === "success" ? (
                         <CheckCircle className="w-4 h-4 text-emerald-600" />
@@ -511,15 +508,15 @@ export default function ExportControlPage() {
                         status === "success"
                           ? "bg-emerald-500 text-white"
                           : status === "error"
-                          ? "bg-red-500 text-white"
-                          : "bg-yellow-400 text-black"
+                            ? "bg-red-500 text-white"
+                            : "bg-yellow-400 text-black"
                       }
                     >
                       {status === "success"
                         ? "Sucesso"
                         : status === "error"
-                        ? "Erro"
-                        : "Pendente"}
+                          ? "Erro"
+                          : "Pendente"}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">{log.message}</p>
@@ -535,5 +532,5 @@ export default function ExportControlPage() {
         </CardContent>
       </Card>
     </div>
-  )  
+  )
 }
