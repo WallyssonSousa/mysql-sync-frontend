@@ -23,9 +23,14 @@ interface BackupConfig {
   tables: BackupTable[]
 }
 
+interface DatabaseOption {
+  value: string
+  label: string
+}
+
 export default function BackupPage() {
   const [loading, setLoading] = useState(false)
-  const [databases, setDatabases] = useState<string[]>([])
+  const [databases, setDatabases] = useState<DatabaseOption[]>([])
   const [tables, setTables] = useState<{ name: string }[]>([])
   const [databaseSearch, setDatabaseSearch] = useState("")
   const [tableSearch, setTableSearch] = useState("")
@@ -66,7 +71,6 @@ export default function BackupPage() {
     setLoadingTables(true)
     try {
       const { data } = await databaseApi.getTables(database)
-      // API retorna array de strings, map para objeto { name }
       const mapped = Array.isArray(data) ? data.map((name: string) => ({ name })) : []
       setTables(mapped)
     } catch (error) {
@@ -77,9 +81,12 @@ export default function BackupPage() {
     }
   }
 
+  // Filtrar bancos pelo label
   const filteredDatabases = (databases || []).filter((db) =>
-    db.toLowerCase().includes(databaseSearch.toLowerCase())
+    db.label.toLowerCase().includes(databaseSearch.toLowerCase())
   )
+
+  // Filtrar tabelas
   const filteredTables = tables.filter((table) =>
     table.name.toLowerCase().includes(tableSearch.toLowerCase())
   )
@@ -117,7 +124,6 @@ export default function BackupPage() {
     try {
       await backupApi.createBackup(config)
       alert("Backup iniciado com sucesso!")
-      // Reset opcional
       setConfig((prev) => ({ ...prev, tables: [] }))
     } catch (error: any) {
       console.error("Erro ao fazer backup:", error)
@@ -172,8 +178,8 @@ export default function BackupPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {filteredDatabases.map((db) => (
-                    <SelectItem key={db} value={db}>
-                      {db}
+                    <SelectItem key={db.value} value={db.value}>
+                      {db.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
