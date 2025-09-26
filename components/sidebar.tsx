@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Archive, Clock, Database, Home, X } from "lucide-react"
+import { Archive, Clock, Cloud, Database, Home, X } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -45,6 +45,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       title: "Agendamentos",
       icon: Clock,
       href: "/dashboard/schedules",
+      roles: ["admin", "user"],
+    },
+    {
+      title: "Backup Automatizado",
+      icon: Cloud,
+      href: "/dashboard/patterns",
       roles: ["admin", "user"],
     },
   ]
