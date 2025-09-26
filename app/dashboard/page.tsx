@@ -160,6 +160,15 @@ export default function DashboardPage() {
       bgColor: "bg-orange-50 dark:bg-orange-950/20",
       roles: ["admin", "user"],
     },
+    {
+      title: "Padrões de Backup",
+      description: "Crie, edite e visualize padrões de backup automático.",
+      icon: Clock,
+      href: "/dashboard/patterns",
+      color: "text-orange-600",
+      bgColor: "bg-orange-50 dark:bg-orange-950/20",
+      roles: ["admin", "user"],
+    },
   ]
 
   const backupPercentage =
