@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { userApi } from "@/lib/api"
-import { Brush, Plug, Trash, Users } from "lucide-react"
+import { Brush, Trash, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 
 type User = {
@@ -99,112 +99,95 @@ export default function SettingsPage() {
             <div className="space-y-2">
                 <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
                 <p className="text-muted-foreground">
-                    Gerencie usuários e conexões do sistema.
+                    Gerencie usuários do sistema.
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Configurar Usuários */}
-                <Card className="hover:shadow-md transition-shadow">
-                    <CardHeader className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 dark:bg-blue-950/20 rounded-full">
-                                <Users className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <CardTitle className="text-lg">Configurar Usuários</CardTitle>
+            {/* Configurar Usuários */}
+            <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-50 dark:bg-blue-950/20 rounded-full">
+                            <Users className="w-5 h-5 text-blue-600" />
                         </div>
-                        <Button size="sm" onClick={openCreateModal}>
-                            {editingUser ? "Editar Usuário" : "Novo Usuário"}
-                        </Button>
-                    </CardHeader>
+                        <CardTitle className="text-lg">Configurar Usuários</CardTitle>
+                    </div>
+                    <Button size="sm" onClick={openCreateModal}>
+                        Novo Usuário
+                    </Button>
+                </CardHeader>
 
-                    <CardContent>
-                        {loading ? (
-                            <p className="text-sm text-muted-foreground">
-                                Carregando usuários...
-                            </p>
-                        ) : users.length > 0 ? (
-                            <div className="space-y-3">
-                                {users.map((user) => {
-                                    const isAdmin = user.role === "admin"
-                                    return (
-                                        <div
-                                            key={user.id}
-                                            className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-shadow"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div
-                                                    className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold ${isAdmin
-                                                            ? "bg-orange-50 dark:bg-orange-950/20 text-orange-600"
-                                                            : "bg-blue-50 dark:bg-blue-950/20 text-blue-600"
-                                                        }`}
-                                                >
-                                                    {user.username[0].toUpperCase()}
-                                                </div>
-
-                                                <div className="flex flex-col">
-                                                    <p className="text-sm font-semibold text-foreground">{user.username}</p>
-                                                    <p className="text-xs text-muted-foreground">ID: {user.id}</p>
-                                                </div>
+                <CardContent>
+                    {loading ? (
+                        <p className="text-sm text-muted-foreground">
+                            Carregando usuários...
+                        </p>
+                    ) : users.length > 0 ? (
+                        <div className="space-y-3">
+                            {users.map((user) => {
+                                const isAdmin = user.role === "admin"
+                                return (
+                                    <div
+                                        key={user.id}
+                                        className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-shadow"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div
+                                                className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold ${isAdmin
+                                                        ? "bg-orange-50 dark:bg-orange-950/20 text-orange-600"
+                                                        : "bg-blue-50 dark:bg-blue-950/20 text-blue-600"
+                                                    }`}
+                                            >
+                                                {user.username[0].toUpperCase()}
                                             </div>
 
-                                            {/* Role + ações */}
-                                            <div className="flex items-center gap-3">
-                                                <Badge
-                                                    variant={isAdmin ? "default" : "secondary"}
-                                                    className={`px-2 py-1 text-xs font-medium ${isAdmin ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-700"
-                                                        }`}
-                                                >
-                                                    {isAdmin ? "Administrador" : "Usuário"}
-                                                </Badge>
-
-                                                <Button
-                                                    size="icon"
-                                                    variant="outline"
-                                                    className="p-2"
-                                                    onClick={() => handleEditUser(user)}
-                                                    title="Editar usuário"
-                                                >
-                                                    <Brush className="w-4 h-4" />
-                                                </Button>
-
-                                                <Button
-                                                    size="icon"
-                                                    variant="destructive"
-                                                    className="p-2"
-                                                    onClick={() => handleDeleteUser(user.id)}
-                                                    title="Excluir usuário"
-                                                >
-                                                    <Trash className="w-4 h-4" />
-                                                </Button>
+                                            <div className="flex flex-col">
+                                                <p className="text-sm font-semibold text-foreground">{user.username}</p>
+                                                <p className="text-xs text-muted-foreground">ID: {user.id}</p>
                                             </div>
                                         </div>
-                                    )
-                                })}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-muted-foreground">
-                                Nenhum usuário cadastrado
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
 
-                {/* Configurar Conexões */}
-                <Card className="hover:shadow-md transition-shadow">
-                    <CardHeader className="flex items-center gap-3">
-                        <div className="p-2 bg-green-50 dark:bg-green-950/20 rounded-full">
-                            <Plug className="w-5 h-5 text-green-600" />
+                                        {/* Role + ações */}
+                                        <div className="flex items-center gap-3">
+                                            <Badge
+                                                variant={isAdmin ? "default" : "secondary"}
+                                                className={`px-2 py-1 text-xs font-medium ${isAdmin ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-700"
+                                                    }`}
+                                            >
+                                                {isAdmin ? "Administrador" : "Usuário"}
+                                            </Badge>
+
+                                            <Button
+                                                size="icon"
+                                                variant="outline"
+                                                className="p-2"
+                                                onClick={() => handleEditUser(user)}
+                                                title="Editar usuário"
+                                            >
+                                                <Brush className="w-4 h-4" />
+                                            </Button>
+
+                                            <Button
+                                                size="icon"
+                                                variant="destructive"
+                                                className="p-2"
+                                                onClick={() => handleDeleteUser(user.id)}
+                                                title="Excluir usuário"
+                                            >
+                                                <Trash className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
-                        <CardTitle className="text-lg">Configurar Conexões</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                    ) : (
                         <p className="text-sm text-muted-foreground">
-                            Funcionalidade em breve...
+                            Nenhum usuário cadastrado
                         </p>
-                    </CardContent>
-                </Card>
-            </div>
+                    )}
+                </CardContent>
+            </Card>
 
             {/* Modal de criação/edição */}
             <Dialog open={modalOpen} onOpenChange={setModalOpen}>
@@ -276,7 +259,6 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
-
                         {/* Botão principal */}
                         <Button
                             onClick={handleSaveUser}
@@ -287,8 +269,6 @@ export default function SettingsPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-
-
         </div>
     )
 }
