@@ -37,18 +37,10 @@ import {
   FolderOpen,
 } from "lucide-react"
 
-import {
-  exportApi,
-  type ApiExportConfig,
-  type ApiExportLog,
-  type CreateExportPayload,
-} from "@/lib/export-api"
+import { exportApi, type ExportConfig, type ExportLog, type CreateExportPayload } from "@/lib/export-api"
 
 type UserRole = "admin" | "user"
 
-/**
- * Modelos NORMALIZADOS para o frontend (tipos usados na tela)
- */
 type ExportConfigModel = {
   id: number
   cron: string
@@ -66,31 +58,31 @@ type ExportLogModel = {
   createdAt: string
 }
 
-/** Mapeadores dos payloads da API -> modelos do frontend */
-function mapExportConfig(api: ApiExportConfig): ExportConfigModel {
+function mapExportConfig(apiConfig: ExportConfig): ExportConfigModel {
   return {
-    id: api.id,
-    cron: api.cron,
-    target: api.target,
-    path: api.path,
-    active: api.active === 1,
-    backupDatabase: api.backupDatabase,
+    id: apiConfig.id,
+    cron: apiConfig.cron,
+    target: apiConfig.target,
+    path: apiConfig.path,
+    active: apiConfig.active === 1,
+    backupDatabase: apiConfig.backupDatabase,
   }
 }
 
-function mapExportLog(api: ApiExportLog): ExportLogModel {
-  const normalized = api.status.toUpperCase()
+function mapExportLog(apiLog: ExportLog): ExportLogModel {
+  const normalized = apiLog.status.toUpperCase()
   const statusMap: Record<string, ExportLogModel["status"]> = {
     SUCCESS: "success",
     ERROR: "error",
+    FAILED: "error",
     RUNNING: "running",
   }
   return {
-    id: api.id,
-    exportId: api.schedule_id,
-    status: statusMap[normalized] ?? api.status.toLowerCase(),
-    message: api.message,
-    createdAt: api.created_at,
+    id: apiLog.id,
+    exportId: apiLog.schedule_id,
+    status: statusMap[normalized] ?? apiLog.status.toLowerCase(),
+    message: apiLog.message,
+    createdAt: apiLog.created_at,
   }
 }
 
@@ -99,7 +91,6 @@ export default function ExportControlPage() {
   const [role, setRole] = useState<UserRole | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // estados com TIPOS concretos (sem any)
   const [exportsCfg, setExportsCfg] = useState<ExportConfigModel[]>([])
   const [logs, setLogs] = useState<ExportLogModel[]>([])
 
@@ -107,13 +98,12 @@ export default function ExportControlPage() {
   const [editingExport, setEditingExport] = useState<ExportConfigModel | null>(null)
 
   const [formData, setFormData] = useState<CreateExportPayload>({
-    cron: "0 2 * * *", // Daily at 2 AM
+    cron: "0 2 * * *",
     target: "local",
     path: "",
     backupDatabase: "",
   })
 
-  // auth básica
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
     if (!token) {
@@ -124,34 +114,26 @@ export default function ExportControlPage() {
     setLoading(false)
   }, [router])
 
-  // carregar exports e logs
   useEffect(() => {
     const fetchData = async () => {
+      if (!role) return
+
       try {
-        const [exportsResponse, logsResponse] = await Promise.all([
-          exportApi.getExports().catch(() => ({ data: [] as ApiExportConfig[] })),
-          exportApi.getExportLogs().catch(() => ({
-            data: { logs: [] as ApiExportLog[], stats: { total: 0, sucess: 0, failed: 0 } }
-          })),
-        ])
+        const [exportsResponse, logsResponse] = await Promise.all([exportApi.getExports(), exportApi.getExportLogs()])
 
         const mappedExports = (exportsResponse.data ?? []).map(mapExportConfig)
         const mappedLogs = (logsResponse.data?.logs ?? []).map(mapExportLog)
 
         setExportsCfg(mappedExports)
         setLogs(mappedLogs)
-
-        // 🔹 Se quiser já salvar as estatísticas:
-        // setStats(logsResponse.data?.stats ?? { total: 0, sucess: 0, failed: 0 })
       } catch (error) {
         console.error("Erro ao buscar dados:", error)
         toast.error("Não foi possível carregar os dados de exportação.")
       }
     }
 
-    if (role) fetchData()
+    fetchData()
   }, [role])
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -164,11 +146,9 @@ export default function ExportControlPage() {
         toast.success("Nova configuração de exportação criada com sucesso.")
       }
 
-      // refresh
-      const exportsResponse = await exportApi.getExports().catch(() => ({ data: [] as ApiExportConfig[] }))
+      const exportsResponse = await exportApi.getExports()
       setExportsCfg((exportsResponse.data ?? []).map(mapExportConfig))
 
-      // reset
       setFormData({
         cron: "0 2 * * *",
         target: "local",
@@ -190,7 +170,6 @@ export default function ExportControlPage() {
       target: exportConfig.target,
       path: exportConfig.path,
       backupDatabase: exportConfig.backupDatabase,
-      // active pode ser ajustado por outro controle se desejar
     })
     setIsCreateDialogOpen(true)
   }
@@ -198,7 +177,7 @@ export default function ExportControlPage() {
   const handleDelete = async (id: number) => {
     try {
       await exportApi.deleteExport(id)
-      setExportsCfg((prev) => prev.filter((exp) => exp.id !== id))
+      setExportsCfg((prev: ExportConfigModel[]) => prev.filter((exp) => exp.id !== id))
       toast.success("Configuração de exportação removida com sucesso.")
     } catch (error) {
       console.error("Erro ao deletar:", error)
@@ -206,7 +185,6 @@ export default function ExportControlPage() {
     }
   }
 
-  // === STATS (sem any, derivados por memo) ===
   const stats = useMemo(() => {
     const todayStr = new Date().toDateString()
 
@@ -215,9 +193,7 @@ export default function ExportControlPage() {
     const runsToday = logs.filter((log) => new Date(log.createdAt).toDateString() === todayStr).length
 
     const successRate =
-      logs.length > 0
-        ? `${Math.round((logs.filter((l) => l.status === "success").length / logs.length) * 100)}%`
-        : "0%"
+      logs.length > 0 ? `${Math.round((logs.filter((l) => l.status === "success").length / logs.length) * 100)}%` : "0%"
 
     return [
       {
@@ -273,7 +249,6 @@ export default function ExportControlPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-foreground">Controle de Exportação</h1>
@@ -306,7 +281,7 @@ export default function ExportControlPage() {
                 <Label htmlFor="cron">Agendamento (Cron)</Label>
                 <Select
                   value={formData.cron}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, cron: value }))}
+                  onValueChange={(value) => setFormData((prev: CreateExportPayload) => ({ ...prev, cron: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um agendamento" />
@@ -325,7 +300,7 @@ export default function ExportControlPage() {
                 <Label htmlFor="target">Destino</Label>
                 <Select
                   value={formData.target}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, target: value }))}
+                  onValueChange={(value) => setFormData((prev: CreateExportPayload) => ({ ...prev, target: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o destino" />
@@ -343,7 +318,7 @@ export default function ExportControlPage() {
                 <Input
                   id="path"
                   value={formData.path}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, path: e.target.value }))}
+                  onChange={(e) => setFormData((prev: CreateExportPayload) => ({ ...prev, path: e.target.value }))}
                   placeholder="C:/Users/USUARIO021/Desktop/export"
                   required
                 />
@@ -354,7 +329,9 @@ export default function ExportControlPage() {
                 <Input
                   id="backupDatabase"
                   value={formData.backupDatabase}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, backupDatabase: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev: CreateExportPayload) => ({ ...prev, backupDatabase: e.target.value }))
+                  }
                   placeholder="mysqlubsyncdois_backup"
                   required
                 />
@@ -373,7 +350,6 @@ export default function ExportControlPage() {
         </Dialog>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon
@@ -396,7 +372,6 @@ export default function ExportControlPage() {
         })}
       </div>
 
-      {/* Export Configurations */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -421,13 +396,7 @@ export default function ExportControlPage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium">{exportConfig.backupDatabase}</h3>
-                      <Badge
-                        className={
-                          exportConfig.active
-                            ? "bg-emerald-500 text-white"
-                            : "bg-red-500 text-white"
-                        }
-                      >
+                      <Badge className={exportConfig.active ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}>
                         {exportConfig.active ? "Ativo" : "Inativo"}
                       </Badge>
                     </div>
@@ -474,7 +443,6 @@ export default function ExportControlPage() {
         </CardContent>
       </Card>
 
-      {/* Logs */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -486,19 +454,13 @@ export default function ExportControlPage() {
           {logs.slice(0, 10).map((log) => {
             const status = log.status?.toLowerCase()
             return (
-              <div
-                key={log.id}
-                className="flex items-center justify-between py-3 border-b border-border last:border-0"
-              >
+              <div key={log.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <div
-                      className={`p-1.5 rounded-full ${status === "success"
-                        ? "bg-emerald-100"
-                        : status === "error"
-                          ? "bg-red-100"
-                          : "bg-yellow-100"
-                        }`}
+                      className={`p-1.5 rounded-full ${
+                        status === "success" ? "bg-emerald-100" : status === "error" ? "bg-red-100" : "bg-yellow-100"
+                      }`}
                     >
                       {status === "success" ? (
                         <CheckCircle className="w-4 h-4 text-emerald-600" />
@@ -518,19 +480,13 @@ export default function ExportControlPage() {
                             : "bg-yellow-400 text-black"
                       }
                     >
-                      {status === "success"
-                        ? "Sucesso"
-                        : status === "error"
-                          ? "Erro"
-                          : "Pendente"}
+                      {status === "success" ? "Sucesso" : status === "error" ? "Erro" : "Pendente"}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">{log.message}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(log.createdAt).toLocaleString("pt-BR")}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{new Date(log.createdAt).toLocaleString("pt-BR")}</p>
                 </div>
               </div>
             )
