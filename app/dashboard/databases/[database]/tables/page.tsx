@@ -19,8 +19,9 @@ export default function TablesPage() {
 
                 const response = await databaseApi.getTables(database)
                 setTables(response.data || [])
-            } catch (err) {
+            } catch (erro) {
                 setError("Erro ao carregar tabelas do banco de dados")
+                console.log('Erro: ', erro)
             } finally {
                 setLoading(false)
             }
