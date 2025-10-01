@@ -12,7 +12,7 @@ type LogItem = {
   id: number
   event_type: string
   table_name: string
-  event_data: Record<string, any>
+  event_data: Record<string, unknown>
   created_at: string
 }
 
