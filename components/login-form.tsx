@@ -27,6 +27,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
       router.push("/dashboard")
     } catch (err) {
       alert("Credenciais inválidas")
+      console.log("Erro: ", err)
     } finally {
       setLoading(false)
     }
