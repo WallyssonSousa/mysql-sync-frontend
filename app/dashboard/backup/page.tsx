@@ -125,7 +125,7 @@ export default function BackupPage() {
       await backupApi.createBackup(config)
       alert("Backup iniciado com sucesso!")
       setConfig((prev) => ({ ...prev, tables: [] }))
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao fazer backup:", error)
       alert("Erro ao conectar com o servidor")
     } finally {
