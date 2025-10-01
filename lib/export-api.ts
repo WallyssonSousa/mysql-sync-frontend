@@ -1,43 +1,44 @@
-import { api } from './api';
+import { api } from "./api"
 
 export interface ExportConfig {
-  id?: number;
-  cron: string;
-  target: string;
-  path: string;
-  backupDatabase: string;
-  createdAt?: string;
-  updatedAt?: string;
-  status?: "1" | "0";
+  id: number
+  cron: string
+  target: string
+  path: string
+  backupDatabase: string
+  createdAt?: string
+  updatedAt?: string
+  active: number 
 }
 
 export interface ExportLog {
-  created_at: string | number | Date;
-  id: number;
-  schedule_id: number;
-  status: "SUCCESS" | "error" | "running";
-  message: string;
+  id: number
+  schedule_id: number
+  status: "SUCCESS" | "FAILED" | "error" | "running"
+  message: string
+  created_at: string
 }
 
 export interface ExportLogsResponse {
-  logs: ExportLog[];
+  logs: ExportLog[]
   stats: {
-    total: number;
-    sucess: number; 
-    failed: number;
-  };
+    total: number
+    sucess: number
+    failed: number
+  }
 }
+
+export type CreateExportPayload = Omit<ExportConfig, "id" | "createdAt" | "updatedAt" | "active">
 
 export const exportApi = {
   getExportLogs: () => api.get<ExportLogsResponse>("/export/export-logs"),
 
-  createExport: (exportData: Omit<ExportConfig, "id" | "createdAt" | "updatedAt">) =>
-    api.post<ExportConfig>("/export", exportData),
+  createExport: (exportData: CreateExportPayload) => api.post<ExportConfig>("/export", exportData),
 
-  updateExport: (id: number, exportData: Partial<ExportConfig>) =>
+  updateExport: (id: number, exportData: Partial<CreateExportPayload>) =>
     api.put<ExportConfig>(`/export/${id}`, exportData),
 
   getExports: () => api.get<ExportConfig[]>("/export"),
 
   deleteExport: (id: number) => api.delete(`/export/${id}`),
-};
+}
