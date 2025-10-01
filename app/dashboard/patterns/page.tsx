@@ -42,7 +42,7 @@ export default function PatternsPage() {
       setNewPattern("")
       await fetchPatterns()
       alert("Padrão criado com sucesso!")
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao criar padrão:", error)
       alert("Erro ao criar padrão. Verifique a conexão com o servidor.")
     } finally {
@@ -56,7 +56,7 @@ export default function PatternsPage() {
       const { data } = await patternApi.scanDatabases()
       alert(data.message || "Scan executado com sucesso!")
       await fetchPatterns()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao executar scan:", error)
       alert("Erro ao executar scan. Verifique a conexão com o servidor.")
     } finally {
